@@ -8,8 +8,12 @@
 
 # Requirements
 - python => 3.x
+- pytorch
+    - [ここ](https://pytorch.org/get-started/locally/)のページを参考に環境にあったpytorchをインストールしておくこと。
 - Docker
 - cuda (GPU 環境を利用する場合)
+
+
 
 # Installation
 
@@ -26,9 +30,22 @@ docker-compose up
 ## 開発向け
 ```
 # prepare enviroments
+## linux, macOS
 python -m venv .venv
+
+## windows（コマンドプロンプトの場合）
+.venv\Scripts\activate.bat
+
+## windows（powershellの場合）
+### スクリプトの実行を許可する（１回だけ実行すれば２回目以降は不要）
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+### 仮想環境の有効化
+.venv\Scripts\activate.ps1
+
+# 共通
 pip install requirements.txt
 
+## 各ツールの実行
 # scraping
 python scrap.py
 
