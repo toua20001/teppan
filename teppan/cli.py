@@ -1,22 +1,26 @@
 #!/usr/bin/env python
 import click
+from logging import getLogger, config
 
+CONFIG_FILE = "config/logging.conf"
+config.fileConfig(CONFIG_FILE)
+logger = getLogger()
 
 @click.group()
 def cli():
-    pass
+    logger.info('##### start teppan app #####')
 
 @cli.command()
 def scraping():
-    pass
+    logger.info('scraping scraping')
 
 @cli.command()
-def training():
-    pass
+def train():
+    logger.info('start training')
 
 @cli.command()
 def predict():
-    pass
+    logger.info('start predicting')
 
 if __name__ == '__main__':
     cli()
