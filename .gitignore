@@ -1,2 +1,3 @@
 .venv/*
 teppan/log/*
+teppan/__pycache__/*
