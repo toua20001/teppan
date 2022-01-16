@@ -34,16 +34,20 @@ git clone https://github.com/toua20001/teppan.git
 cd teppan
 
 # 環境の準備
-## linux, macOS
+## python仮想環境の準備
 python -m venv .venv
 
-## windows（コマンドプロンプトの場合）
+## 仮想環境の有効化
+### linux, macOS
+source .venv/bin/activate
+
+### windows（コマンドプロンプトの場合）
 .venv\Scripts\activate.bat
 
-## windows（powershellの場合）
-### スクリプトの実行を許可する（１回だけ実行すれば２回目以降は不要）
+### windows（powershellの場合）
+#### スクリプトの実行を許可する（１回だけ実行すれば２回目以降は不要）
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-### 仮想環境の有効化
+#### 仮想環境の有効化
 .venv\Scripts\activate.ps1
 
 # 共通
