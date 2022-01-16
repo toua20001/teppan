@@ -4,7 +4,7 @@ from logging import getLogger, config
 
 CONFIG_FILE = "config/logging.conf"
 config.fileConfig(CONFIG_FILE)
-logger = getLogger()
+logger = getLogger(__name__)
 
 @click.group()
 def cli():
