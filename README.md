@@ -28,7 +28,7 @@ docker-compose up
 ```
 
 ## 開発向け
-```
+```bash
 # 環境の準備
 ## linux, macOS
 python -m venv .venv
