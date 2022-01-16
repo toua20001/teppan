@@ -29,7 +29,7 @@ docker-compose up
 
 ## 開発向け
 ```
-# prepare enviroments
+# 環境の準備
 ## linux, macOS
 python -m venv .venv
 
@@ -43,7 +43,7 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 .venv\Scripts\activate.ps1
 
 # 共通
-pip install requirements.txt
+pip install -r requirements.txt
 
 ## 各ツールの実行
 # scraping
