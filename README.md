@@ -29,6 +29,10 @@ docker-compose up
 
 ## 開発向け
 ```bash
+# リポジトリのclone
+git clone https://github.com/toua20001/teppan.git
+cd teppan
+
 # 環境の準備
 ## linux, macOS
 python -m venv .venv
@@ -45,16 +49,9 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 # 共通
 pip install -r requirements.txt
 
-## 各ツールの実行
-# scraping
-python scrap.py
-
-# training
-python train.py
-
-# predictiong
-python predict.py
-
+# 実行する
+cd teppan
+python cli.py train
 ```
 
 # Usage
