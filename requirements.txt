@@ -1,1 +1,6 @@
 click
+bs4
+pandas
+html5lib
+lxml
+pyyaml

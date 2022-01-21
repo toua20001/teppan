@@ -1,0 +1,12 @@
+parameters:
+  track[]:
+  - 1
+  start_year: 2021
+  start_mon: 1
+  end_year: 2021
+  end_mon: 12
+  grade[]:
+  - 1
+  list: 100
+result:
+  output: result/test.csv

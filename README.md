@@ -18,17 +18,17 @@
 # Installation
 
 ## 学習済みモデルを使用して予測
-```
+```bash
 docker-compose up
 ```
 
 ## モデル学習
-```
+```bash
 docker-compose up
 ```
 
 ## 開発向け
-```
+```bash
 # prepare enviroments
 ## linux, macOS
 python -m venv .venv
@@ -45,19 +45,43 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 # 共通
 pip install requirements.txt
 
-## 各ツールの実行
-# scraping
-python scrap.py
-
-# training
-python train.py
-
-# predictiong
-python predict.py
-
 ```
 
 # Usage
+## 過去レース、競走馬の検索
 
+```bash
+# レースのデータ収集
+python scraping.py race [検索条件の設定ファイル]
+
+# 競走馬のデータ収集
+# ----- 未実装 -----
+python scraping.py horse [検索条件の設定ファイル]
+```
+
+検索条件に設定できる値は[wiki参照](https://github.com/toua20001/teppan/wiki/Netkeiba%E3%81%AE%E6%A4%9C%E7%B4%A2%E6%9D%A1%E4%BB%B6)。  
+結果の出力ファイルについても設定ファイル内で記載する。
+
+```yaml
+parameters:
+  track[]:         # 複数選択可能な項目はリスト形式で記載する
+  - 1              # 芝
+  - 2              # ダート
+  start_year: 2021 # 複数選択できないものは辞書形式で記載する
+result:
+  output: result.test.csv # 出力ファイル名の指定
+```
+
+### 例: 試しに2021年の芝のG1レースの結果を集計する
+```bash
+python scraping.py race config/2021_shiba_g1.yaml
+head result/test.csv
+```
+
+## 予測モデルの学習
+**!! 未実装 !!**
+
+## 学習済みモデルを使って予測
+**!! 未実装 !!**
 
 # Note
