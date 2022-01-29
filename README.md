@@ -62,8 +62,12 @@ python cli.py train
 ## 過去レース、競走馬の検索
 
 ```bash
+# レース一覧のデータ収集
+python scraping.py racelist [検索条件の設定ファイル] [出力ファイル名]
+
 # レースのデータ収集
-python scraping.py race [検索条件の設定ファイル]
+# レース一覧ファイルはracelistコマンドで生成したものと同じフォーマット
+python scraping.py races [レース一覧ファイル] [出力ファイル名]
 
 # 競走馬のデータ収集
 # ----- 未実装 -----
@@ -85,8 +89,10 @@ result:
 
 ### 例: 試しに2021年の芝のG1レースの結果を集計する
 ```bash
-python scraping.py race config/2021_shiba_g1.yaml
-head result/test.csv
+python scraping.py racelist config/2021_shiba_g1.yaml result/racelist.csv
+cat result/racelist.csv
+python scraping.py races result/racelist.csv result/races.csv
+cat result/races
 ```
 
 ## 予測モデルの学習

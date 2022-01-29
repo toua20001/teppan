@@ -99,7 +99,6 @@ class RaceListSearch(SearchFromNetkeiba):
         with open(infilename) as f:
             conf = yaml.safe_load(f)
         parameters = conf.get('parameters')
-        self.output = conf.get('result')
         super().__init__(pid='race_list', **parameters)
 
     def _get_race_ids(self):
@@ -148,9 +147,7 @@ class RaceListSearch(SearchFromNetkeiba):
         self.result = result
         return self.result
 
-    def save(self, outfname=None):
-        if outfname is None:
-            outfname = self.output.get('output')
+    def save(self, outfname):
         dname = os.path.dirname(outfname)
         os.makedirs(dname, exist_ok=True)
         self.result.to_csv(outfname, index=False)

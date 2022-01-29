@@ -18,11 +18,12 @@ def cli():
 
 @cli.command()
 @click.argument("configfile", type=str)
-def racelist(configfile):
+@click.argument("outfilename", type=str)
+def racelist(configfile, outfilename):
         logger.info("START race list search")
         rls = RaceListSearch(configfile)
         rls.getSearchResultDataFrames()
-        rls.save()
+        rls.save(outfilename)
         rls.clear()
         logger.info("complete.")
 
