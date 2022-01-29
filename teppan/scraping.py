@@ -2,33 +2,67 @@ import os
 from logging import getLogger, config
 from bs4 import BeautifulSoup as bs
 from urllib import request
-from typing import Union
+from typing import Optional, Union
 import pandas as pd
 import re
 import yaml
 import math
 import argparse
 import tempfile
+import time
 
+# logger
 CONFIG_FILE = "config/logging.conf"
 config.fileConfig(CONFIG_FILE)
 logger = getLogger(__name__)
 
 
-class SearchFromNetkeiba:
-    """netkeibaのデータベースページから情報を取得するためのクラス"""
-    url = 'https://db.netkeiba.com/'
-    pid = ""
+class HttpBase:
+    """HPにアクセスするためのベースクラス"""
     parameters = {}
+    url = None
+    
+    def __init__(self, url: Optional[str] = None, **kwargs):
+        self.url = url
+        self.parameters = kwargs
+
+    def getHtml(self, url: Optional[str] = None):
+        """対象のURLにアクセスしてHtmlデータを取得します。"""
+        # urlが設定されていない場合は終了する
+        if self.url is None and url is None:
+            logger.error("url is not defined")
+            return
+        target = self.url
+        if url is not None:
+            target = url
+        # 対象のURLにアクセスする
+        ## アクセスしすぎないように１秒まつ
+        time.sleep(1)
+        res = request.urlopen(target)
+        soup = bs(res, features="lxml")
+        res.close
+        return soup
+        
+    def setParameters(self, k: str, v: str):
+        """パラメータを追加で設定する"""
+        self.parameters[k] = v
+
+    def _convParameters(self, name: str, value: str):
+        """dictを検索条件形式に変形"""
+        if value == "":
+            return ""
+        else:
+            return f"&{name}={value}"
+
+
+class SearchFromNetkeiba(HttpBase):
+    """netkeibaのデータベースページから情報を取得するためのクラス"""
+    pid = ""
     localfilename = None
 
     def __init__(self, pid: str, **kwargs):
         self.pid = pid
-        self.parameters = kwargs
-
-    def setParameters(self, k: str, v: str):
-        """パラメータを追加で設定する"""
-        self.parameters[k] = v
+        super().__init__(url='https://db.netkeiba.com/', **kwargs)
 
     def getSearchConditions(self) -> str:
         """検索条件をURLの形式で取得する"""
@@ -43,14 +77,7 @@ class SearchFromNetkeiba:
                 result += self._convParameters(k, v)
         return result
 
-    def _convParameters(self, name: str, value: str):
-        """dictを検索条件形式に変形"""
-        if value == "":
-            return ""
-        else:
-            return f"&{name}={value}"
-    
-    def getSearchResultDataFrames(self):
+    def getSearchResultDataFrames(self) -> pd.DataFrame:
         """DataFrame形式で検索結果を取得する"""
         cnd = self.getSearchConditions()
         if self.localfilename is None:
@@ -64,14 +91,12 @@ class SearchFromNetkeiba:
             dfs = pd.read_html(self.localfilename)
         return dfs
 
-    def getSearchResultHtml(self, savefile: bool = True):
+    def getSearchResultHtml(self, savefile: bool = True) -> bs:
         """html形式で結果を取得する"""
         cnd = self.getSearchConditions()
         url = f'{self.url}{cnd}'
         logger.info(f"GET {url}")
-        res = request.urlopen(url)
-        soup = bs(res, features="lxml")
-        res.close
+        soup = self.getHtml(url)
         if savefile:
             # 一時ファイルに書き出す
             if self.localfilename is None:
@@ -83,15 +108,16 @@ class SearchFromNetkeiba:
             else:
                 with open(self.localfilename, 'w+t', encoding='utf-8') as tfname:
                     tfname.write(str(soup))
-                    logger.info(f"http response save as {self.localfilename} (rewrite)")
+                    logger.info(f"http response save as {self.localfilename}")
         return soup
 
     def getResultcount(self) -> Union[str, str, str]:
         """検索結果の件数を取得する"""
         try:
             html = self.getSearchResultHtml()
-            pager = html.find_all(class_='pager')[0].text.replace('\n', '')
-            match = re.match('(?P<count>[0-9,]*)件中(?P<start>[0-9]*)〜(?P<end>[0-9])*件目.*', pager)
+            pager = html.find(class_='pager').text
+            pager = pager.replace('\n', '')
+            match = re.search('(?P<count>[0-9,]+)件中(?P<start>[0-9]+).*(?P<end>[0-9]+)件目', pager)
             count = int(match.group('count').replace(',', ''))
             start = int(match.group('start'))
             end = int(match.group('start'))
@@ -101,14 +127,13 @@ class SearchFromNetkeiba:
             end = 0
         return count, start, end
 
-    def close(self):
+    def clear(self):
         if os.path.exists(self.localfilename):
             logger.info(f"remove localfile: {self.localfilename}")
             os.remove(self.localfilename)
 
-class RaceSearch(SearchFromNetkeiba):
+class RaceListSearch(SearchFromNetkeiba):
     """過去レースを検索するクラス"""
-    race_ids = []
 
     def __init__(self, infilename):
         with open(infilename) as f:
@@ -121,37 +146,44 @@ class RaceSearch(SearchFromNetkeiba):
         """検索結果のhtmlからレースIDのリストを取得する"""
         ptn = re.compile("/race/(?P<raceid>[0-9a-zA-z]{12})/")  # レースIDのパターン
         soup = self.getSearchResultHtml()
-        ris = []
+        raceids = []
         for links in soup.find('table').find_all('a'):
             href = links.get('href')
-            if ptn.match(href) is None:
+            match = ptn.match(href)
+            if match is None:
                 continue  # レース以外のリンクはスキップする
-            ris.append(href)
-        logger.info(f"raceids: {ris}")
-        self.race_ids.extend(ris)
+            # リンクのID部分だけを抽出する
+            raceids.append(match.group("raceid"))
+        return raceids
 
     def getSearchResultDataFrames(self):
         # 検索結果の件数を取得する
         record_by_page = self.parameters.get('list', 20)
         cmax, _, _ = self.getResultcount()
         max_page = math.ceil(cmax/record_by_page)
-        result = pd.DataFrame()
+        result = None
         logger.info('search parameters: %s', self.parameters)
         logger.info('access to: %s', self.url + self.getSearchConditions())
         logger.info('get %s records', cmax)
         cmax = 1 if cmax == 0 else cmax  # cmaxが0でも1回はデータ取得を試みる
         # 最後のページまでデータを取得する
         for page, itr in enumerate(range(0, cmax, record_by_page), 1):
-            # レースのリンクを取得する
-            self._get_race_ids()
             # このイテレーションで取得するテーブルサイズ
             itr_max = min(cmax, itr+record_by_page-1)
             logger.info('[%s / %s] get %s - %s records ...', page, max_page, itr, itr_max)
             # ページを指定して検索
             self.parameters['page'] = page
-            rst = super().getSearchResultDataFrames()
+            # レースのリンクを取得する
+            raceids = self._get_race_ids()
+            # 検索結果の取得
+            gsrdf = super().getSearchResultDataFrames()[0]
+            # レースリンク情報を追加
+            gsrdf['raceid'] = raceids
             # 結果のタンキング
-            result = result.append(rst[0])
+            if result is None:
+                result = gsrdf
+            else:
+                result = pd.concat([result, gsrdf], axis=0)
         self.result = result
         return self.result
 
@@ -172,10 +204,10 @@ if __name__ == '__main__':
 
     if args.mode == 'race':
         logger.info('start scraping ...')
-        rs = RaceSearch(args.filename)
-        rs.getSearchResultDataFrames()
-        rs.save()
-        rs.close()
+        rls = RaceListSearch(args.filename)
+        rls.getSearchResultDataFrames()
+        rls.save()
+        rls.clear()
     elif args.mode == 'horse':
         logger.info('未実装')
         pass
