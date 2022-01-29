@@ -61,11 +61,13 @@ class SearchFromNetkeiba(HttpBase):
                 with tempfile.NamedTemporaryFile(
                     mode='w+t', encoding='utf-8', delete=False, dir='./') as tfname:
                     tfname.write(str(soup))
+                    tfname.flush()
                     self.localfilename = tfname.name
                     logger.info(f"http response save as {self.localfilename}")
             else:
                 with open(self.localfilename, 'w+t', encoding='utf-8') as tfname:
                     tfname.write(str(soup))
+                    tfname.flush()
                     logger.info(f"http response save as {self.localfilename}")
         return soup
 
@@ -138,6 +140,7 @@ class RaceListSearch(SearchFromNetkeiba):
             # レースリンク情報を追加
             gsrdf['raceid'] = raceids
             # 結果のタンキング
+            gsrdf = gsrdf[ ["開催日", "レース名", "raceid"] ]
             if result is None:
                 result = gsrdf
             else:
@@ -150,6 +153,6 @@ class RaceListSearch(SearchFromNetkeiba):
             outfname = self.output.get('output')
         dname = os.path.dirname(outfname)
         os.makedirs(dname, exist_ok=True)
-        self.result.to_csv(outfname)
+        self.result.to_csv(outfname, index=False)
         logger.info('output result data: %s', outfname)
 
