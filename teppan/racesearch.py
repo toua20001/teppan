@@ -33,11 +33,15 @@ class RaceSearch(HttpBase):
             mode = 'x'
         # レース結果の取得
         with tempfile.NamedTemporaryFile(
-            mode='w+t', encoding='utf-8', delete=False, dir='./') as tfname:
+            mode='w+t', encoding='utf-8', dir='./') as tfname:
+            logger.info(f"search target: ID={self.raceid}, name={self.racename}")
+            logger.info(f"GET {self.url}")
             soup = self.getHtml()
             tfname.write(str(soup))
             tfname.flush()
-            result = pd.read_html(tfname.name)[0]
+            result = self.html_to_dataframe(tfname.name)
+            if isinstance(result, list):
+                result = result[0]
             # 競走馬IDの一覧を取得する
             ptn = re.compile("/horse/(?P<horseid>[0-9]{10})/")
             links = soup.find("table").find_all("a")
@@ -53,12 +57,7 @@ class RaceSearch(HttpBase):
             result['レース名'] = f"{self.raceid}_{self.racename}"
             # 出力ファイルに書きこむ
             # 新規作成ならヘッダーを書き込む
+            logger.info(f"write to {outfname}")
             header = False if os.path.exists(outfname) else True
             result.to_csv(outfname, index=False, header=header, mode=mode)
 
-
-
-if __name__ == '__main__':
-    rs = RaceSearch("202106050811", "有馬記念(G1)")
-    print(rs.__dict__)
-    rs.saveas("test")

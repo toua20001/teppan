@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup as bs
 from urllib import request
 from typing import Optional
 import time
+import pandas as pd
+from udexception import ReadHtmlException
 
 # logger
 logger = getLogger(__name__)
@@ -44,4 +46,12 @@ class HttpBase:
             return ""
         else:
             return f"&{name}={value}"
+
+    def html_to_dataframe(self, url: str) -> pd.DataFrame:
+        """pandas.DataFrame#read_htmlを使ってhtmlからテーブルのリストを取得します。"""
+        try:
+            return pd.read_html(url)
+        except:
+            logger.error(f"cannnot read html: {url}")
+            raise ReadHtmlException("cannot read html: %s", url)
 

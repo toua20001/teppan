@@ -1,6 +1,8 @@
-import argparse
 from logging import config, getLogger
 import traceback
+import click
+import pandas as pd
+from udexception import ReadHtmlException
 
 # logger
 CONFIG_FILE = "config/logging.conf"
@@ -8,31 +10,41 @@ config.fileConfig(CONFIG_FILE)
 logger = getLogger(__name__)
 
 from racelistsearch import RaceListSearch
+from racesearch import RaceSearch
 
+@click.group()
+def cli():
+    pass
 
-def race_list_search():
-        logger.info('start scraping ...')
-        rls = RaceListSearch(args.filename)
+@cli.command()
+@click.argument("configfile", type=str)
+def racelist(configfile):
+        logger.info("START race list search")
+        rls = RaceListSearch(configfile)
         rls.getSearchResultDataFrames()
         rls.save()
         rls.clear()
+        logger.info("complete.")
+
+@cli.command()
+@click.argument("racelist", type=str)
+@click.argument("outfilename", type=str)
+def races(racelist, outfilename):
+    logger.info("START race detail search")
+    races = pd.read_csv(racelist)
+    for idx, row in races.iterrows():
+        try:
+            rs = RaceSearch(row['raceid'], row['レース名'])
+            rs.saveas(outfilename)
+        except ReadHtmlException:
+            logger.warning(f"skiped: ID={row['raceid']}, name={row['レース名']}")
+    logger.info("complete.")
+
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=['race', 'horse'], help='検索対象（race: レース, horse: 競走馬）')
-    parser.add_argument('filename', help='検索条件をの設定ファイル')
-    args = parser.parse_args()
-
     try:
-        if args.mode == 'race':
-            race_list_search()
-        elif args.mode == 'horse':
-            logger.info('未実装')
-            pass
-        else:
-            logger.warning('unknown mode: %s', args.mode)
+        cli()
     except Exception:
         traceback.print_exc()
-        logger.info("エラーが発生したため終了します。")
-    
-    logger.info('complete.')
+        logger.info("Abort.")

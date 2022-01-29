@@ -42,11 +42,11 @@ class SearchFromNetkeiba(HttpBase):
             # HPにアクセスする
             url = f'{self.url}{cnd}'
             logger.info(f"GET {url}")
-            dfs = pd.read_html(url)
+            dfs = self.html_to_dataframe(url)
         else:
             # ローカルにファイルが保存してあればそのファイルを読み込む
             logger.info(f"load localfile: {self.localfilename}")
-            dfs = pd.read_html(self.localfilename)
+            dfs = self.html_to_dataframe(self.localfilename)
         return dfs
 
     def getSearchResultHtml(self, savefile: bool = True) -> bs:
