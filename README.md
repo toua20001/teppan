@@ -89,10 +89,10 @@ result:
 
 ### 例: 試しに2021年の芝のG1レースの結果を集計する
 ```bash
-python scraping.py racelist config/2021_shiba_g1.yaml result/racelist.csv
-cat result/racelist.csv
-python scraping.py races result/racelist.csv result/races.csv
-cat result/races
+python scraping.py racelist config/2021_shiba_g1.yaml
+cat result/RaceListSearch/2021_shiba_g1.csv
+python scraping.py races result/RaceListSearch/2021_shiba_g1.csv
+cat result/RaceSearch/2021_shiba_g1.csv
 ```
 
 ## 予測モデルの学習
