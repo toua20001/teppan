@@ -5,15 +5,20 @@ from typing import Optional
 import time
 import pandas as pd
 from udexception import ReadHtmlException
+import configparser
 
 # logger
 logger = getLogger(__name__)
+# config
+config = configparser.ConfigParser()
+config.read("config/teppan.conf", encoding="utf-8")
 
 
 class HttpBase:
     """HPにアクセスするためのベースクラス"""
     parameters = {}
     url = None
+    waittime = int(config.get("httpaccess", "waittime"))
     
     def __init__(self, url: Optional[str] = None, **kwargs):
         self.url = url
@@ -30,7 +35,7 @@ class HttpBase:
             target = url
         # 対象のURLにアクセスする
         ## アクセスしすぎないように１秒まつ
-        time.sleep(1)
+        time.sleep(self.waittime)
         res = request.urlopen(target)
         soup = bs(res, features="lxml")
         res.close

@@ -1,7 +1,5 @@
-from ctypes.wintypes import HMODULE
 from logging import getLogger
 import os
-import pandas as pd
 import tempfile
 import re
 
@@ -34,7 +32,6 @@ class RaceSearch(HttpBase):
         # レース結果の取得
         with tempfile.NamedTemporaryFile(
             mode='w+t', encoding='utf-8', dir='./') as tfname:
-            logger.info(f"search target: ID={self.raceid}, name={self.racename}")
             logger.info(f"GET {self.url}")
             soup = self.getHtml()
             tfname.write(str(soup))
